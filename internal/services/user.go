@@ -2,26 +2,27 @@ package services
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/zhangzh-pku/im-engine/internal/models"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
-type ConcreteLoginService struct {
+type ConcreteUserService struct {
 	db *gorm.DB
 }
 
-type LoginService interface {
+type UserService interface {
 	Registry(request models.LoginRequest) (*models.User, error)
 	Login(request models.LoginRequest) (*models.User, error)
 }
 
-func NewLoginService(db *gorm.DB) LoginService {
-	return &ConcreteLoginService{db: db}
+func NewUserService(db *gorm.DB) UserService {
+	return &ConcreteUserService{db: db}
 }
 
-func (s *ConcreteLoginService) Registry(request models.LoginRequest) (*models.User, error) {
+func (s *ConcreteUserService) Registry(request models.LoginRequest) (*models.User, error) {
 	var existingUser models.User
 	if err := s.db.Where("phone = ?", request.PhoneNumber).First(&existingUser).Error; err == nil {
 		return nil, errors.New("phone number already exists")
@@ -40,7 +41,7 @@ func (s *ConcreteLoginService) Registry(request models.LoginRequest) (*models.Us
 	return &newUser, nil
 }
 
-func (s *ConcreteLoginService) Login(request models.LoginRequest) (*models.User, error) {
+func (s *ConcreteUserService) Login(request models.LoginRequest) (*models.User, error) {
 	var existingUser models.User
 	if err := s.db.Where("phone = ?", request.PhoneNumber).First(&existingUser).Error; err != nil {
 		return nil, errors.New("user not found")
@@ -49,4 +50,11 @@ func (s *ConcreteLoginService) Login(request models.LoginRequest) (*models.User,
 		return nil, errors.New("password incorrect")
 	}
 	return &existingUser, nil
+}
+
+func (s ConcreteUserService) SendMessage(sender models.User, receiver models.User, message string) error {
+	client := GetMqttClient()
+	topic := fmt.Sprintf("chat/dm/%d/%d", sender.ID, receiver.ID)
+	client.Publish(topic, message)
+	return nil
 }
