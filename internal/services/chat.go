@@ -9,7 +9,6 @@ import (
 	"github.com/zhangzh-pku/im-engine/internal/websocket"
 )
 
-// 单例模式实现的MQTT
 type MqttClient struct {
 	mqttClient mqtt.Client
 }
@@ -31,10 +30,8 @@ func GetMqttClient() MqttClient {
 func MessageHandler(client mqtt.Client, msg mqtt.Message) {
 	topic := msg.Topic()
 	payload := string(msg.Payload())
-	// topic format chat/dm/%d_%d
 	if topic[:8] == "chat/dm/" {
 		receiver := topic[strings.Index(topic, "_")+1:]
-		// switch to int if error panic
 		receiverID, err := strconv.Atoi(receiver)
 		if err != nil {
 			panic(err)
