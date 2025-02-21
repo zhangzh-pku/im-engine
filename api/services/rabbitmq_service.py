@@ -1,7 +1,10 @@
-import aio_pika
-from ..core.config import settings
 import json
 from typing import Callable
+
+import aio_pika
+
+from ..core.config import settings
+
 
 class AsyncRabbitMQService:
     def __init__(self):

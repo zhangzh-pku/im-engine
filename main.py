@@ -6,10 +6,12 @@ import uvicorn
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # 启动时执行
-    await chat.chat_service.initialize()
-    yield
-    # 关闭时执行
+    # # 启动时执行
+    # await chat.chat_service.initialize()
+    # yield
+    # # 关闭时执行
+    # await chat.chat_service.cleanup()
+    pass
     
 app = FastAPI(title=settings.PROJECT_NAME, lifespan=lifespan)
 

@@ -1,9 +1,14 @@
+from typing import List
+
+from fastapi import Depends
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from ..models.chat import Message, Thread
+from ..models.database_models import DBMessage, DBThread
 from .mqtt_service import AsyncMQTTService
 from .rabbitmq_service import AsyncRabbitMQService
-from ..models.chat import Message, Thread
-from typing import List
-from sqlalchemy.ext.asyncio import AsyncSession
-from fastapi import Depends
+
 
 class AsyncChatService:
     def __init__(self):
@@ -19,10 +24,15 @@ class AsyncChatService:
         await self.rabbitmq.close()
         
     async def send_message(self, message: Message, db: AsyncSession):
-        # 异步保存到数据库
-        # db.add(message)
-        # await db.commit()
-        # await db.refresh(message)
+        # 创建数据库消息对象
+        db_message = DBMessage(
+            thread_id=message.thread_id,
+            content=message.content,
+            sender_id=message.sender_id
+        )
+        db.add(db_message)
+        await db.commit()
+        await db.refresh(db_message)
         
         # 异步发布到MQTT
         await self.mqtt.publish(
@@ -39,10 +49,13 @@ class AsyncChatService:
         return message
     
     async def create_thread(self, thread: Thread, db: AsyncSession) -> Thread:
-        # 异步创建线程
-        # db.add(thread)
-        # await db.commit()
-        # await db.refresh(thread)
+        # 创建数据库线程对象
+        db_thread = DBThread(
+            title=thread.title
+        )
+        db.add(db_thread)
+        await db.commit()
+        await db.refresh(db_thread)
         return thread
     
     async def get_thread_messages(
@@ -52,7 +65,17 @@ class AsyncChatService:
         db: AsyncSession = None
     ) -> List[Message]:
         # 异步查询消息
-        # query = select(Message).where(Message.thread_id == thread_id)
-        # result = await db.execute(query)
-        # messages = result.scalars().all()
-        return [] 
+        query = select(DBMessage).where(
+            DBMessage.thread_id == thread_id
+        ).limit(limit)
+        result = await db.execute(query)
+        messages = result.scalars().all()
+        return [
+            Message(
+                id=msg.id,
+                thread_id=msg.thread_id,
+                content=msg.content,
+                sender_id=msg.sender_id,
+                created_at=msg.created_at
+            ) for msg in messages
+        ] 

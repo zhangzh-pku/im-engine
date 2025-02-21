@@ -1,6 +1,6 @@
+from sqlalchemy import (ARRAY, JSON, Boolean, Column, DateTime, ForeignKey,
+                        Index, Integer, String, UniqueConstraint)
 from sqlalchemy.orm import declarative_base
-from sqlalchemy import Column, Integer, String, DateTime, ARRAY, Boolean, JSON
-
 
 Base = declarative_base()
 
@@ -16,8 +16,25 @@ class FriendTable(Base):
     __tablename__ = "friends"
 
     id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     friend_ids = Column(ARRAY(Integer), nullable=False)
+    
+    __table_args__ = (
+        Index('idx_friends_user_id', user_id),
+        Index('idx_friends_friend_ids', friend_ids, postgresql_using='gin'),
+    )
+
+class FriendRequestTable(Base):
+    __tablename__ = "friend_requests"
+
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, primary_key=True)
+    friend_id = Column(Integer, ForeignKey("users.id"), nullable=False, primary_key=True)
+    status = Column(Integer, nullable=False)
+    __table_args__ = (
+        Index("idx_user_friend", user_id, friend_id, unique=True),
+        UniqueConstraint("user_id", "friend_id", name="unique_user_friend"),
+    )
+    
 
 class MessageTable(Base):
     __tablename__ = "messages"
