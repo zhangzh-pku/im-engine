@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+pydantic
+pydantic-settings
+python-dotenv
+# 异步MQTT客户端
+gmqtt
+# 异步RabbitMQ客户端
+aio-pika
+# 异步PostgreSQL驱动
+asyncpg
+# SQLAlchemy异步支持
+sqlalchemy[asyncio] 

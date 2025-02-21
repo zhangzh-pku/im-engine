@@ -1,0 +1,17 @@
+chat_system/
+├── api/
+│   ├── models/
+│   │   ├── chat.py (已存在)
+│   │   └── user.py (需要创建)
+│   ├── routes/
+│   │   ├── chat.py
+│   │   └── auth.py
+│   ├── services/
+│   │   ├── mqtt_service.py
+│   │   ├── rabbitmq_service.py
+│   │   └── chat_service.py
+│   └── core/
+│       ├── config.py
+│       └── dependencies.py
+├── main.py
+└── requirements.txt 
