@@ -90,7 +90,9 @@ async def reject_friend_request(friend_id: int, id: int = Depends(get_current_us
     else:
         raise HTTPException(status_code=404, detail="好友请求不存在")
     return {"message": "拒绝好友请求成功"}
-    
+
+
+# 只记录状态 不做对原本friend request 表的更改
 @router.post("/friends/requests/{friend_id}")
 async def send_friend_request(friend_id: int, id: int = Depends(get_current_user_id), db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(UserTable).where(UserTable.id == id))
@@ -119,3 +121,9 @@ async def delete_friend(friend_id: int, id: int = Depends(get_current_user_id), 
     if friend_id in friends_dict[id]:
         friends_dict[id].remove(friend_id)
     return {"message": "删除好友成功"}
+
+@router.get("/friends")
+async def get_friends(id: int = Depends(get_current_user_id), db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(FriendTable).where(FriendTable.user_id == id))
+    friends = result.scalars().all()
+    return {"friends": friends}
